@@ -1,6 +1,7 @@
 ﻿#include "gmock/gmock.h"
 #include "device_driver.h"
 #include "flash_memory_device.h"
+#include "app.cpp"
 
 
 /*
@@ -23,7 +24,6 @@ public:
 	MOCK_METHOD(unsigned char, read, (long), (override));
 	MOCK_METHOD(void, write, (long, unsigned char), (override));
 };
-
 
 class fixtureFlash : public testing::Test
 {
@@ -73,6 +73,24 @@ TEST_F(fixtureFlash, WriteFromHWAndException) {
 		.WillRepeatedly(Return((unsigned char)0xAA));
 
 	EXPECT_THROW(driver->write(0xB, 0xBB), WriteFailException);
+}
+
+TEST_F(fixtureFlash, AppReadAndPrint) {
+	EXPECT_CALL(mock, read)
+		.WillRepeatedly(Return((unsigned char)0xAA));
+	EXPECT_CALL(mock, read)
+		.Times(100*5);
+
+	Application app(driver);
+	app.readAndPrint(0, 100);
+
+}
+
+TEST_F(fixtureFlash, AppWriteAll) {
+	Application app(driver);
+	EXPECT_CALL(mock, read)
+		.WillRepeatedly(Return((unsigned char)0xFF));
+	app.writeAll(0xEF);
 }
 
 
